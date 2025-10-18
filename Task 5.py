@@ -1,3 +1,6 @@
+import time
+import datetime
+import calendar
 import hashlib
 import zipfile
 import base64
@@ -18,7 +21,8 @@ vfs_data = {}
 vfs_hash = ""
 curr_dir = "/"
 vfs_name = "default"
-
+command_history = []
+start_time = time.time()
 
 def remove_file(args): #Удаление файла
     if not args:
@@ -114,6 +118,7 @@ def rev_text(text): #Перевод текста
     return text[::-1]
 
 def create_def_vfs(): #Создание стандартного vfs
+    global vfs_data, vfs_name, vfs_hash
     vfs_data = {
         "/": {"type": "dir", "name": "/"},
         "/home": {"type": "dir", "name": "home"},
@@ -154,6 +159,7 @@ def create_def_vfs(): #Создание стандартного vfs
             appout(f"{motd_content}\n\n")
 
 def load_vfs(vfs_p): #Загрузка vfs из архива
+    global vfs_data, vfs_hash, vfs_name
     try:
         if not os.path.exists(vfs_p):
             raise FileNotFoundError(f"VFS файл не найден: {vfs_p}")
@@ -177,11 +183,11 @@ def load_vfs(vfs_p): #Загрузка vfs из архива
 
             with open(vfs_p, "rb") as f: #Вычисление хеша
                 vfs_fdata = f.read()
-                vfs_hash = hashlib.sha256(vfs_d).hexdigest()
+                vfs_hash = hashlib.sha256(vfs_fdata).hexdigest()
                 vfs_name = os.path.basename(vfs_p)
 
-            if "/modt" in vfs_data: #Показ modt при старте
-                modt_cont = vfs_get_cont("/modt")
+            if "/motd" in vfs_data: #Показ modt при старте
+                modt_cont = vfs_get_cont("/motd")
                 if modt_cont:
                     appout(f"{modt_cont}\n\n")
 
@@ -235,7 +241,7 @@ def vfs_change_directory(path): #Смена текущей директории 
     if path == "..": # Переход на уровень выше
         if curr_dir != "/":
             parts = curr_dir.rstrip('/').split('/')
-            currdir = '/' + '/'.join(parts[:-1]) if len(parts) > 1 else "/"
+            curr_dir = '/' + '/'.join(parts[:-1]) if len(parts) > 1 else "/"
         return True
     elif path == ".":
         return True
@@ -268,8 +274,8 @@ def vfs_get_file_content(path): #Получение содержимого фа�
 
 def vfs_init_command(): #Команда vfs-init - сброс к VFS по умолчанию
     global vfs_data, curr_dir
-    vfs_init_default()
-    urr_dir = "/"
+    create_def_vfs()
+    curr_dir = "/"
     return "VFS инициализирована по умолчанию"
 
 def begin(scr_p):
@@ -572,6 +578,18 @@ def run(vfs_p, scr_p):
     print(f"Путь к VFS: {vfs_p}")
     print(f"Путь к скрипту: {scr_p}\n")
     print("===============================")
+
+    if vfs_p:
+        try:
+            load_vfs(vfs_p)
+            appout(f"VFS загружена из: {vfs_p}\n\n")
+        except Exception as e:
+            appout(f"Ошибка загрузки VFS: {e}\n")
+            create_def_vfs()
+            appout("Используется VFS по умолчанию\n\n")
+    else:
+        create_def_vfs()
+        appout("Используется VFS по умолчанию\n\n")
 
     if scr_p:
         begin(scr_p)
