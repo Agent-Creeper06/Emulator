@@ -7,6 +7,8 @@ import shlex
 import re
 import socket
 
+ras = {}
+
 def begin(scr_p):
     try:
         with open(scr_p, "r", encoding="utf-8") as f:
@@ -17,19 +19,19 @@ def begin(scr_p):
             if not line or line.startswith("#"):
                 continue
 
-            self.appout(f"$ {line}\n")
+            appout(f"$ {line}\n")
             try: #Проверка на ошибки
                 result = emulate(line)
                 if result:
-                    appout(result + endl)
+                    appout(result + "\n")
             except Exception as e:
-                appout("Ошибка выполнения скрипта: " + e + endl)
+                appout(f"Ошибка выполнения скрипта: {e} \n")
                 break
 
     except FileNotFoundError:
         appout(f"Ошибка: скрипт {scr_p} не найден\n")
     except Exception as e:
-        appout("Ошибка чтения скрипта: " + e + endl)
+        appout(f"Ошибка чтения скрипта: {e} \n")
 
 def parse(commline):  # Парсер
     if not commline.strip():
@@ -233,12 +235,14 @@ def exitem(args):  # Реализация exit
         return "Необхожим численный аргумент"
 
 def run(vfs_p, scr_p):
+    global ras
     ras = dict(os.environ)  # Словарь переменных окружения
     ras["PWD"] = os.getcwd()  # Добавляем текущую директорию
 
     print("=== >Параметры эмулятора< ===")
     print(f"Путь к VFS: {vfs_p}")
     print(f"Путь к скрипту: {scr_p}\n")
+    print("===============================")
 
     if scr_p:
         begin(scr_p)
@@ -257,8 +261,6 @@ def main():
     args = parser.parse_args()
 
     run(vfs_p = args.vfs, scr_p = args.script)
-
-ras = {}
 
 window = Tk()  # имя и размер окна
 window.title("Эмулятор - " + os.getlogin() + "@" + socket.gethostname())
