@@ -1,5 +1,3 @@
-import argparse
-import sys
 from tkinter import *
 from tkinter import scrolledtext
 import os
@@ -7,29 +5,6 @@ import shlex
 import re
 import socket
 
-def begin(scr_p):
-    try:
-        with open(scr_p, "r", encoding="utf-8") as f:
-            lines = f.readlines()
-
-        for line in lines: #Пропуск пустых строк и комментариев
-            line = line.strip()
-            if not line or line.startswith("#"):
-                continue
-
-            self.appout(f"$ {line}\n")
-            try: #Проверка на ошибки
-                result = emulate(line)
-                if result:
-                    appout(result + endl)
-            except Exception as e:
-                appout("Ошибка выполнения скрипта: " + e + endl)
-                break
-
-    except FileNotFoundError:
-        appout(f"Ошибка: скрипт {scr_p} не найден\n")
-    except Exception as e:
-        appout("Ошибка чтения скрипта: " + e + endl)
 
 def parse(commline):  # Парсер
     if not commline.strip():
@@ -162,7 +137,6 @@ def openpath(dir):  # Раскрытие тильды и переменных
         return ras.get('HOME', os.getcwd())
     elif dir.startswith("~/"):
         return os.path.join(ras.get('HOME', os.getcwd()), dir[2:])
-    return dir
 
 
 def changedir(args):  # Реализация cd
@@ -232,16 +206,6 @@ def exitem(args):  # Реализация exit
     except ValueError:
         return "Необхожим численный аргумент"
 
-def run(vfs_p, scr_p):
-    ras = dict(os.environ)  # Словарь переменных окружения
-    ras["PWD"] = os.getcwd()  # Добавляем текущую директорию
-
-    print("=== >Параметры эмулятора< ===")
-    print(f"Путь к VFS: {vfs_p}")
-    print(f"Путь к скрипту: {scr_p}\n")
-
-    if scr_p:
-        begin(scr_p)
 
 def appout(text):
     outpt.config(state=NORMAL)
@@ -249,23 +213,15 @@ def appout(text):
     outpt.see(END)
     outpt.config(state=DISABLED)
 
-def main():
-    parser = argparse.ArgumentParser(description="Эмулятор командной оболочки")
-    parser.add_argument("--vfs", help="Путь к физическому расположению VFS")
-    parser.add_argument("--script", help="Путь к стартовому скрипту")
 
-    args = parser.parse_args()
-
-    run(vfs_p = args.vfs, scr_p = args.script)
-
-ras = {}
+ras = dict(os.environ)  # Словарь переменных окружения
+ras["PWD"] = os.getcwd()  # Добавляем текущую директорию
 
 window = Tk()  # имя и размер окна
 window.title("Эмулятор - " + os.getlogin() + "@" + socket.gethostname())
 window.geometry("800x600")
 
-outpt = scrolledtext.ScrolledText(window, wrap=WORD, bg='black', fg='white',
-                                  font=('Courier', 12))  # оформление окна
+outpt = scrolledtext.ScrolledText(window, wrap=WORD, bg='black', fg='white', font=('Courier', 12))  # оформление окна
 outpt.pack(expand=True, fill='both')
 outpt.config(state=DISABLED)
 
@@ -274,6 +230,4 @@ inpt.pack(fill='x')
 inpt.bind('<Return>', execute)
 inpt.focus()
 
-if __name__ == "__main__":
-    main()
-    window.mainloop()
+window.mainloop()
